@@ -21,12 +21,19 @@ class AddTwo(object):
         # Hint:  You'll want to look at tf.placeholder and sess.run.
 
         # START YOUR CODE
-        pass
+        tf.reset_default_graph()  # clear away any leftovers from previous executions
+        self.x_ = tf.placeholder(tf.int32)
+        self.y_ = tf.placeholder(tf.int32)
+
         # END YOUR CODE
 
     def Add(self, x, y):
         # START YOUR CODE
-        pass
+        add = self.x_ + self.y_
+        with tf.Session() as session:
+            session.run(tf.initialize_all_variables())
+            result = session.run(add, feed_dict={self.x_: x, self.y_:y})
+        return result
         # END YOUR CODE
 
 def affine_layer(hidden_dim, x, seed=0):
@@ -35,7 +42,17 @@ def affine_layer(hidden_dim, x, seed=0):
     # seed: use this seed for xavier initialization.
 
     # START YOUR CODE
-    pass
+    dim = x.get_shape()[-1]
+    W = tf.get_variable("W", shape=[dim, hidden_dim],
+                        initializer=tf.contrib.layers.xavier_initializer(seed=seed))
+    B = tf.get_variable("B", initializer = 0.)
+    return(tf.add(tf.matmul(x, W), B, name="affine"))
+
+
+    #z = xW+b
+    # b is zeros
+    # w is xavier_initialization
+    
     # END YOUR CODE
 
 def fully_connected_layers(hidden_dims, x):
@@ -47,7 +64,11 @@ def fully_connected_layers(hidden_dims, x):
     # unique.
 
     # START YOUR CODE
-    pass
+
+    for i in range(len(hidden_dims)):
+        with tf.variable_scope("layer"+str(i)):
+            x = tf.nn.relu(affine_layer(hidden_dims[i], x))
+    return(x)
     # END YOUR CODE
 
 def train_nn(X, y, X_test, hidden_dims, batch_size, num_epochs, learning_rate):
@@ -76,8 +97,9 @@ def train_nn(X, y, X_test, hidden_dims, batch_size, num_epochs, learning_rate):
     # - train_op: the training operation resulting from minimizing the loss
     #             with a GradientDescentOptimizer
     # START YOUR CODE
-    pass
-
+    y_hat = tf.squeeze(tf.sigmoid(affine_layer(1, fully_connected_layers(hidden_dims, x_ph), seed=0)))
+    loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(y_hat, y_ph, name="entropy"))
+    train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
     # END YOUR CODE
 
 
@@ -99,7 +121,9 @@ def train_nn(X, y, X_test, hidden_dims, batch_size, num_epochs, learning_rate):
 
             # Populate loss_value with the loss this iteration.
             # START YOUR CODE
-            pass
+            global_step_value = ''#sess.run(tf.add(global_step, 1))
+            loss_value = sess.run(loss, feed_dict={x_ph: X, y_ph: y})
+            sess.run(train_op, feed_dict={x_ph: X, y_ph: y})
             # END YOUR CODE
         if epoch_num % 300 == 0:
             print 'Step: ', global_step_value, 'Loss:', loss_value
@@ -109,5 +133,5 @@ def train_nn(X, y, X_test, hidden_dims, batch_size, num_epochs, learning_rate):
 
     # Return your predictions.
     # START YOUR CODE
-    pass
+    return(np.round(sess.run(y_hat, feed_dict= {x_ph : X_test})))
     # END YOUR CODE

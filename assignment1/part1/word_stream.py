@@ -8,7 +8,9 @@ def context_windows(words, C=5):
          yield the_next_window
     '''
     # START YOUR CODE HERE
-    pass
+    for i in range(len(words)):
+        if len(words[i:i+C]) == C:
+            yield(words[i:i+C])
     # END YOUR CODE HERE
 
 
@@ -27,6 +29,17 @@ def cooccurrence_table(words, C=2):
     '''
     table = []
     # START YOUR CODE HERE
+    codict = {}
+    for item in context_windows(words, C*2+1):
+        for i in range(C*2+1):
+            if i == C: 
+                pass
+            else:
+                try:
+                    codict[item[C], item[i]] += 1./abs(C-i)
+                except:
+                    codict[item[C], item[i]] = 1./abs(C-i)
+    table = [(key[0], key[1], codict[key]) for key in codict]
     # END YOUR CODE HERE
     return table
 
@@ -42,5 +55,8 @@ def score_bigram(bigram, unigram_counts, bigram_counts, delta):
       - delta: the adjustment factor
     '''
     # START YOUR CODE HERE
-    pass
+    if bigram in bigram_counts:
+        return(1.0*(bigram_counts[bigram] - delta)/(unigram_counts[bigram[0]]*unigram_counts[bigram[1]]))
+    else:
+        return(1.0*0) 
     # END YOUR CODE HERE
