@@ -25,7 +25,14 @@ def wordids_to_tensors(wordids, embedding_dim, vocab_size, seed=0):
     As usual the "b" vector should be initialized to 0.
     '''
     # START YOUR CODE
-    pass
+
+    m = tf.get_variable("m", shape=[vocab_size, embedding_dim],
+                    initializer=tf.random_uniform_initializer(minval=-1.0, maxval=1.0))
+    biases = tf.get_variable("b", shape=[vocab_size], initializer = tf.constant_initializer(value = 0.))
+    
+    w = tf.nn.embedding_lookup(m, wordids)
+    b = tf.nn.embedding_lookup(biases, wordids)
+    return(w, b, m)
 
     # END YOUR CODE
 
@@ -45,7 +52,9 @@ def example_weight(Xij, x_max, alpha):
       - A vector of corresponding weights.
     '''
     # START YOUR CODE
-    pass
+
+    return tf.minimum(tf.pow(tf.div(Xij, x_max), alpha), tf.constant(1.))
+
     # END YOUR CODE
 
 
@@ -63,5 +72,8 @@ def loss(w, b, w_c, b_c, c):
       - loss |batch_size|: the loss of each example in the batch
     '''
     # START YOUR CODE
-    pass
+    print w_c
+    print w
+    return tf.reduce_sum(tf.sub(tf.add(tf.add(tf.matmul(w, tf.transpose(w_c)), b_c ), b), tf.log(c)),1)
+    #return tf.add(tf.add(tf.reduce_sum(tf.mul(w, w_c), 1), b_c), b)
     # END YOUR CODE

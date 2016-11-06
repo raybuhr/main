@@ -49,9 +49,6 @@ def affine_layer(hidden_dim, x, seed=0):
     return(tf.add(tf.matmul(x, W), B, name="affine"))
 
 
-    #z = xW+b
-    # b is zeros
-    # w is xavier_initialization
     
     # END YOUR CODE
 

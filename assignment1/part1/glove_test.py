@@ -53,6 +53,7 @@ class TestGlove(tf.test.TestCase):
                 w_c: np.array([[8., 0, 0], [2., 4., 6.]]),
                 b_c: np.array([2., 5.]),
                 c: np.array([50, 200])})
+            print(loss_val)
 
             self.assertAllEqual((2,), loss_val.shape)
             self.assertAlmostEquals(60.511177, loss_val[0], places=5)

@@ -34,7 +34,13 @@ def MakeFancyRNNCell(H, keep_prob, num_layers=1):
     (tf.nn.rnn_cell.RNNCell) multi-layer LSTM cell with dropout
   """
   #### YOUR CODE HERE ####
-  cell = None  # replace with something better
+
+  
+  cell = tf.nn.rnn_cell.LSTMCell(H)
+  cell = tf.nn.rnn_cell.DropoutWrapper(cell, 
+                                        input_keep_prob=keep_prob, 
+                                        output_keep_prob=keep_prob) 
+  cell = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers)
 
 
 
@@ -121,25 +127,43 @@ class RNNLM(object):
 
     # Construct embedding layer
 
+    # get embedding for word
+    with tf.variable_scope("embeddings"):
+        self.initial_h_ = tf.get_variable("embedding_layer", shape=[self.V, self.H],
+                                    initializer=tf.random_uniform_initializer(minval=-1.0, maxval=1.0))
+    
+        self.embeddings = tf.nn.embedding_lookup(self.initial_h_, self.input_w_)
+    
+   
+
     # Construct RNN/LSTM cell and recurrent layer
 
-
+    with tf.variable_scope("recurrent_layer"):
+        self.outputs = []
+        self.cell = MakeFancyRNNCell(self.H, self.dropout_keep_prob_, self.num_layers)
+        initial_state = self.cell.zero_state(self.batch_size_, tf.float32)
+        self.outputs, self.state = tf.nn.dynamic_rnn(self.cell, self.embeddings, initial_state=initial_state)
 
     # Softmax output layer, over vocabulary
     # Hint: use the matmul3d() helper here.
+    with tf.variable_scope("softmax"):
+        self.softmax_w = tf.get_variable(
+            "softmax_w", [self.H, self.V], dtype=tf.float32)
+        self.softmax_b = tf.get_variable("softmax_b", [self.V], dtype=tf.float32)
+        self.logits_ = matmul3d(self.outputs, self.softmax_w) + self.softmax_b
 
     # Loss computation (true loss, for prediction)
-
+    with tf.variable_scope("loss"):
+        self.loss_ = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(self.logits_, self.target_y_, name='loss'))
+        
     #### END(YOUR CODE) ####
 
 
   def BuildTrainGraph(self):
     """Construct the training ops.
-
     You should define:
     - train_loss_ (optional): an approximate loss function for training
     - train_step_ : a training op that can be called once per batch
-
     Your loss function should return a *scalar* value that represents the
     _summed_ loss across all examples in the batch (i.e. use tf.reduce_sum, not
     tf.reduce_mean).
@@ -148,23 +172,35 @@ class RNNLM(object):
     self.train_step_ = tf.no_op(name="dummy")
 
     # Replace this with an actual loss function
-    self.train_loss_= None
+    self.train_loss_ = None
 
     #### YOUR CODE HERE ####
 
     # Define loss function(s)
     with tf.name_scope("Train_Loss"):
       # Placeholder: replace with a sampled loss
-      self.train_loss = self.loss_
-
-
+      #X_r = tf.reshape(, [-1,d])
+      self.train_loss_ = tf.nn.sampled_softmax_loss(self.softmax_w, 
+                                                   self.softmax_b, 
+                                                   tf.reshape(self.outputs, [2,-1]), 
+                                                   self.target_y_, 
+                                                   num_sampled = 1000, #placeholder for now  
+                                                   num_classes = self.V)
+    
     # Define optimizer and training op
     with tf.name_scope("Training"):
       self.train_step_ = None  # Placeholder: replace with an actual op
+      #train_op = tf.train.GradientDescentOptimizer(self.learning_rate_).minimize(self.train_loss_)
+      optimizer = tf.train.GradientDescentOptimizer(self.learning_rate_)
+      tvars = tf.trainable_variables()
+      grads, _ = tf.clip_by_global_norm(tf.gradients(self.train_loss_, tvars), self.max_grad_norm_)
+      self.train_step_ = optimizer.apply_gradients(zip(grads, tvars))
+        
+      #For training steps, you can use any optimizer, but we recommend  tf.train.GradientDescentOptimizer with gradient clipping (tf.clip_by_global_norm) or tf.train.AdagradOptimizer.
 
+    
     #### END(YOUR CODE) ####
-
-
+    
   def BuildSamplerGraph(self):
     """Construct the sampling ops.
 
