@@ -1,0 +1,6 @@
+model_checkpoint_path: "rnnlm_trained"
+all_model_checkpoint_paths: "rnnlm-2"
+all_model_checkpoint_paths: "rnnlm-3"
+all_model_checkpoint_paths: "rnnlm-4"
+all_model_checkpoint_paths: "rnnlm-5"
+all_model_checkpoint_paths: "rnnlm_trained"

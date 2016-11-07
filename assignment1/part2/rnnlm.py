@@ -180,12 +180,16 @@ class RNNLM(object):
     with tf.name_scope("Train_Loss"):
       # Placeholder: replace with a sampled loss
       #X_r = tf.reshape(, [-1,d])
-      self.train_loss_ = tf.nn.sampled_softmax_loss(tf.transpose(self.softmax_w), 
+      w = tf.transpose(self.softmax_w)
+      self.train_loss_ = tf.reduce_sum(tf.nn.sampled_softmax_loss(w,
                                                    self.softmax_b, 
-                                                   tf.reshape(self.outputs, [2,-1]), 
-                                                   tf.expand_dims(self.target_y_), 
+                                                   tf.reshape(self.outputs, [-1,self.H]), 
+                                                   tf.reshape(self.target_y_, [-1,1]), 
                                                    num_sampled = 100, #placeholder for now  
-                                                   num_classes = self.V)
+                                                   num_classes = self.V),
+                                                   name = "train_loss")
+    
+     #train_loss_ = tf.reduce_sum(per_example_train_loss_, name="sampled_softmax_loss")
     #tf.nn.sampled_softmax_loss(tf.transpose(W23_), b3_, hx_, 
     #                                        labels=tf.expand_dims(y_, 1), 
     # Define optimizer and training op
@@ -215,7 +219,9 @@ class RNNLM(object):
 
     #### YOUR CODE HERE ####
     
-    #tf.multinomial(logits, num_samples, seed=None, name=None)
+    self.pred_samples_ = tf.multinomial(tf.reshape(self.logits_, [2,-1]),# tf.reshape(self.outputs, [2,-1])
+                                        num_samples = 1,
+                                        name="sampler")
 
 
     #### END(YOUR CODE) ####
