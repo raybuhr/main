@@ -213,6 +213,8 @@ class RNNLM(object):
     self.pred_samples_ = None
 
     #### YOUR CODE HERE ####
+    
+    #tf.multinomial(logits, num_samples, seed=None, name=None)
 
 
     #### END(YOUR CODE) ####
