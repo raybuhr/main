@@ -29,7 +29,7 @@ More specifically:
   although you're welcome to use standard Python libraries like `pdb` or 
   `itertools` if you desire.
 
-### Due date and submissions
+## Due date and submissions
 
 Please do your work in a `git` repository; you can simply clone the course repo 
 to get started. If there are any updates or fixes to the assignment, we'll 
@@ -42,3 +42,14 @@ Submissions will be done via GitHub; we'll release a submit script closer to the
 If you haven't already, be sure to [enter your GitHub username and Berkeley ID here](https://goo.gl/forms/wiyDmlozh5yLh1hr1) 
 so that the course staff can properly receive your submission.
 
+### Submitting your assignment
+
+To submit:
+1) Visit 
+https://classroom.github.com/assignment-invitations/01305f94b6d896f24c01b081516051c3 
+and log in with your GitHub account; this will make a submission repository 
+`datasci-w266/your_username`
+2) Run `assignment1/submit.sh your_github_username` to submit
+
+If you get an error with the submit script, you can also submit by manually 
+pushing your solution to your submission repo.

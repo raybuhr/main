@@ -42,7 +42,11 @@ def MakeFancyRNNCell(H, keep_prob, num_layers=1):
                                         output_keep_prob=keep_prob) 
   cell = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers)
 
-
+  # Solution
+  cell = tf.nn.rnn_cell.BasicLSTMCell(H, forget_bias=0.0)
+  cell = tf.nn.rnn_cell.DropoutWrapper(cell, input_keep_prob=keep_prob,
+                                       output_keep_prob=keep_prob)
+  cell = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers)
 
   #### END(YOUR CODE) ####
   return cell
@@ -72,17 +76,19 @@ class RNNLM(object):
       self.dropout_keep_prob_ = tf.constant(0.5, name="dropout_keep_prob")
       # For gradient clipping, if you use it.
       # Due to a bug in TensorFlow, this needs to be an ordinary python
-      # constant.
+      # constant instead of a tf.constant.
       self.max_grad_norm_ = 5.0
 
   def BuildCoreGraph(self):
     """Construct the core RNNLM graph, needed for any use of the model.
 
     This should include:
-    - Placeholders for input tensors (input_w, initial_h, target_y)
+    - Placeholders for input tensors (input_w_, initial_h_, target_y_)
     - Variables for model parameters
     - Tensors representing various intermediate states
-    - A Tensor for the output logits (logits_)
+    - A Tensor for the final state (final_h_)
+    - A Tensor for the output logits (logits_), i.e. the un-normalized argument
+      of the softmax(...) function in the output layer.
     - A scalar loss function (loss_)
 
     Your loss function should return a *scalar* value that represents the
@@ -91,6 +97,11 @@ class RNNLM(object):
 
     You shouldn't include training or sampling functions here; you'll do this
     in BuildTrainGraph and BuildSampleGraph below.
+
+    We give you some starter definitions for input_w_ and target_y_, as well
+    as a few other tensors that might help. We've also added dummy values for
+    initial_h_, logits_, and loss_ - you should re-define these in your code as
+    the appropriate tensors. See the in-line comments for more detail.
     """
     # Input ids, with dynamic shape depending on input.
     # Should be shape [batch_size, max_time] and contain integer word indices.
@@ -99,6 +110,11 @@ class RNNLM(object):
     # Initial hidden state. You'll need to overwrite this with cell.zero_state
     # once you construct your RNN cell.
     self.initial_h_ = None
+
+    # Final hidden state. You'll need to overwrite this with the output from
+    # tf.nn.dynamic_rnn so that you can pass it in to the next batch (if
+    # applicable).
+    self.final_h_ = None
 
     # Output logits, which can be used by loss functions or for prediction.
     # Overwrite this with an actual Tensor of shape [batch_size, max_time]
@@ -134,9 +150,8 @@ class RNNLM(object):
     
         self.embeddings = tf.nn.embedding_lookup(self.initial_h_, self.input_w_)
     
-   
-
-    # Construct RNN/LSTM cell and recurrent layer
+ 
+    # Construct RNN/LSTM cell and recurrent layer (hint: use tf.nn.dynamic_rnn)
 
     with tf.variable_scope("recurrent_layer"):
         self.outputs = []
@@ -212,7 +227,7 @@ class RNNLM(object):
     You should define pred_samples_ to be a Tensor of integer indices for
     sampled predictions for each batch element, at each timestep.
 
-    Hint: use tf.multinomial
+    Hint: use tf.multinomial, along with a couple of calls to tf.reshape
     """
     # Replace with a Tensor of shape [batch_size, max_time, 1]
     self.pred_samples_ = None
